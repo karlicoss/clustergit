@@ -334,6 +334,25 @@ def check(dirname, options):
             gitted = True
 
             # OK, contains a .git file. Let's descend into it
+            messages = []
+
+            # first fetch so git status tells us where we are
+            if options.fetch:
+                # fetch from the remote
+                # deal with [deleted] [new branch] and sha
+                status, fetch = run(
+                    '%s git fetch --all --prune %s'
+                    % (cmdprefix, ' '.join(options.remote.split(":"))), options
+                )
+                if options.verbose:
+                    sys.stdout.write(fetch + "\n")
+                if "error: " in fetch:
+                    messages.append(colorize(Colors.FAIL, "Fetch fatal"))
+                else:
+                    messages.append(colorize(Colors.OKPURPLE, "Fetched"))
+                if status != 0:
+                    messages.append(colorize(Colors.FAIL, "Fetch unsuccessful"))
+
             # and ask git for a status
             status, out = run('%s git status' % cmdprefix, options)
             if options.verbose:
@@ -341,7 +360,6 @@ def check(dirname, options):
 
             if options.relative:
                 infile = os.path.relpath(infile, options.dirname)
-            messages = []
             clean = True
             can_push = False
             can_pull = True
@@ -410,22 +428,6 @@ def check(dirname, options):
                     messages.append(colorize(Colors.FAIL, "Pull fatal"))
                 else:
                     messages.append(colorize(Colors.OKBLUE, "Pulled"))
-
-            if options.fetch:
-                # fetch from the remote
-                # deal with [deleted] [new branch] and sha
-                status, fetch = run(
-                    '%s git fetch --all --prune %s'
-                    % (cmdprefix, ' '.join(options.remote.split(":"))), options
-                )
-                if options.verbose:
-                    sys.stdout.write(fetch + "\n")
-                if "error: " in fetch:
-                    messages.append(colorize(Colors.FAIL, "Fetch fatal"))
-                else:
-                    messages.append(colorize(Colors.OKPURPLE, "Fetched"))
-                if status != 0:
-                    messages.append(colorize(Colors.FAIL, "Fetch unsuccessful"))
 
             if options.command:
                 exit_status, output = run(
