@@ -97,10 +97,10 @@ def read_arguments(args):
     )
     parser.add_argument(
         "-d", "--dir",
-        dest="dirname",
-        action="store",
-        help="The directory to parse sub dirs from",
-        default="."
+        dest="dirnames",
+        action="append",
+        help="Directories to parse sub dirs from",
+        default=None,
     )
 
     parser.add_argument(
@@ -477,12 +477,15 @@ def check(dirname, options):
 def main(args):
     try:
         options = read_arguments(args)
+        if options.dirnames is None:
+            options.dirnames = ['.']
+
         if options.clear:
             os.system('clear')
 
         if not options.quiet:
             sys.stdout.write('Starting git status...\n')
-            sys.stdout.write('Scanning sub directories of %s\n' % options.dirname)
+            sys.stdout.write('Scanning sub directories of %s\n' % ' '.join(options.dirnames))
 
         if not options.colors:
             # noinspection PyGlobalUndefined
@@ -492,12 +495,13 @@ def main(args):
         gitted = False
         dirties = 0
 
-        for (path, dirs, files) in os.walk(options.dirname, topdown=True):
-            new_gitted, new_dirties = check(path, options)
-            gitted = gitted or new_gitted
-            dirties += new_dirties
-            if not options.recursive:
-                break
+        for root in options.dirnames:
+            for (path, dirs, files) in os.walk(root, topdown=True):
+                new_gitted, new_dirties = check(path, options)
+                gitted = gitted or new_gitted
+                dirties += new_dirties
+                if not options.recursive:
+                    break
 
         if not gitted:
             show_error("Error: None of those sub directories had a .git file.\n")
