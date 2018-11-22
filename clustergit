@@ -257,6 +257,13 @@ def read_arguments(args):
         help="Prints a warning if a directory is not under git version control"
     )
 
+    parser.add_argument(
+        "--error-on-dirty",
+        action="store_true",
+        default=False,
+        help="Exit with nonzero code on dirty repositories"
+    )
+
     autocomplete(parser)
     options = parser.parse_args(args)
     return options
@@ -519,7 +526,10 @@ def main(args):
 
         if not options.quiet:
             sys.stdout.write("Done\n")
-    except (KeyboardInterrupt, SystemExit):
+
+        if options.error_on_dirty and dirties > 0:
+            sys.exit(1)
+    except KeyboardInterrupt:
         sys.stdout.write("\n")
 
 
