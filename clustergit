@@ -385,6 +385,10 @@ def check(dirname, options):
                 messages.append(colorize(Colors.FAIL, "Unpushed commits"))
                 can_pull = False
                 clean = False
+            elif 'Your branch is behind' in out:
+                messages.append(colorize(Colors.FAIL, "Behind"))
+                clean = False
+                can_push = False
             else:
                 can_push = False
 
